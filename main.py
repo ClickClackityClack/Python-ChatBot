@@ -1,3 +1,5 @@
+from shutil import move
+from typing import Iterator
 import nltk
 import numpy
 import tflearn
@@ -5,15 +7,26 @@ import tensorflow
 import random
 import json
 import pickle
+import wikipedia
 import os
 import speech_recognition as sr
 import pyttsx3
+from datetime import datetime
+import winsound
+import time
 from nltk.stem.lancaster import LancasterStemmer
+from pyfirmata import Arduino, util
+#board = Arduino('COM3')
+#iterator = util.Iterator(board)
+#iterator.start();
+#pin9 = board.get_pin('d:9:s')
+#def move_servo(a):
+#    pin9.write(a)
 Listener = sr.Recognizer()
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
-engine.setProperty('voice', voices[1].id)
-newVoiceRate = 130
+engine.setProperty('voice', voices[2].id)
+newVoiceRate = 120
 engine.setProperty('rate', newVoiceRate)
 stemmer = LancasterStemmer()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -30,14 +43,14 @@ except:
     docs_y = []
 
     for intent in data["intents"]:
-        for pattern in intent["patterns"]:
+        for pattern in intent["text"]:
             wrds = nltk.word_tokenize(pattern)
             words.extend(wrds)
             docs_x.append(wrds)
-            docs_y.append(intent["tag"])
+            docs_y.append(intent["intent"])
 
-        if intent["tag"] not in labels:
-            labels.append(intent["tag"])
+        if intent["intent"] not in labels:
+            labels.append(intent["intent"])
 
     words = [stemmer.stem(w.lower()) for w in words if w != "?"]
     words = sorted(list(set(words)))
@@ -101,17 +114,25 @@ def bag_of_words(s, words):
             
     return numpy.array(bag)
 
+#def blink():
+    move_servo(0)
+    move_servo(60)
+    time.sleep(1)
+    move_servo(0)
 
 def chat():
-    engine.say("Start talking with the bot (type quit to stop)!")
-    engine.runAndWait()
+    frequency = 200  # Set Frequency To 200 Hertz
+    duration = 1000  # Set Duration To 1000 ms == 1 second
+    winsound.Beep(frequency, duration)
     while True:
-        with sr.Microphone() as source:
-            voice = Listener.listen(source)
+        #with sr.Microphone() as source:
+        #    voice = Listener.listen(source)
         
-        inp = Listener.recognize_google(voice)
+        inp = input(":")
+        
         print(inp)
         if inp == "quit":  
+                print("goodbye")
                 engine.say("goodbye")
                 engine.runAndWait()
                 break
@@ -121,9 +142,22 @@ def chat():
         tag = labels[results_index]
 
         for tg in data["intents"]:
-            if tg['tag'] == tag:
+            if tg['intent'] == tag:
                 responses = tg['responses']
-
+                if(tg['intent'] == "TimeQuery"):
+                    now = datetime.now()
+                    current_time = now.strftime("%I:%M %p")   
+                    engine.say(current_time) 
+                    engine.runAndWait()
+                    responses = [" ", " ", " "]
+                if(tg['intent'] == "Search"):
+                    wordz = inp.split()
+                    
+                    engine.say(wikipedia.summary(wordz[-1]))
+                    engine.runAndWait();
+                    responses = [" ", " ", " "]
+        #blink()
+        print(random.choice(responses))
         engine.say(random.choice(responses))
         engine.runAndWait()
 
