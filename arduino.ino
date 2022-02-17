@@ -162,6 +162,7 @@ void enableI2CPins()
 {
   byte i;
   // is there a faster way to do this? would probaby require importing
+  //
   // Arduino.h to get SCL and SDA pins
   for (i = 0; i < TOTAL_PINS; i++) {
     if (IS_PIN_I2C(i)) {
