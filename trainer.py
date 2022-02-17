@@ -20,14 +20,14 @@ docs_x = []
 docs_y = []
 
 for intent in data["intents"]:
-    for pattern in intent["patterns"]:
+    for pattern in intent["text"]:
         wrds = nltk.word_tokenize(pattern)
         words.extend(wrds)
         docs_x.append(wrds)
-        docs_y.append(intent["tag"])
+        docs_y.append(intent["intent"])
 
-    if intent["tag"] not in labels:
-        labels.append(intent["tag"])
+    if intent["intent"] not in labels:
+        labels.append(intent["intent"])
 
 words = [stemmer.stem(w.lower()) for w in words if w != "?"]
 words = sorted(list(set(words)))
@@ -70,5 +70,5 @@ net = tflearn.regression(net)
 
 model = tflearn.DNN(net)
 
-model.fit(training, output, n_epoch=100, batch_size=8, show_metric=True)
+model.fit(training, output, n_epoch=1000, batch_size=8, show_metric=True)
 model.save("model.tflearn")
