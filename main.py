@@ -1,9 +1,11 @@
+from platform import system_alias
 from shutil import move
 from typing import Iterator
 import nltk
 import numpy
 import tflearn
 import tensorflow
+import wolframalpha
 import random
 import json
 import pickle
@@ -14,22 +16,27 @@ import pyttsx3
 from datetime import datetime
 import winsound
 import time
+import PySimpleGUI as sg
 from nltk.stem.lancaster import LancasterStemmer
 from pyfirmata import Arduino, util
 #board = Arduino('COM3')
 #iterator = util.Iterator(board)
-#iterator.start();
+# iterator.start();
 #pin9 = board.get_pin('d:9:s')
-#def move_servo(a):
-#    pin9.write(a)
+# def move_servo(a):
+#    pin9.write(a)#event, values = window.read()
+
 Listener = sr.Recognizer()
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[2].id)
-newVoiceRate = 120
+newVoiceRate = 125
 engine.setProperty('rate', newVoiceRate)
 stemmer = LancasterStemmer()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+app_id = "AVW9PQ-P2LQGKJPQ9"
+client = wolframalpha.Client(app_id)
+
 with open("intents.json") as file:
     data = json.load(file)
 
@@ -101,6 +108,7 @@ except:
     model.fit(training, output, n_epoch=1000, batch_size=8, show_metric=True)
     model.save("model.tflearn")
 
+
 def bag_of_words(s, words):
     bag = [0 for _ in range(len(words))]
 
@@ -111,54 +119,90 @@ def bag_of_words(s, words):
         for i, w in enumerate(words):
             if w == se:
                 bag[i] = 1
-            
+
     return numpy.array(bag)
 
-#def blink():
-    move_servo(0)
-    move_servo(60)
-    time.sleep(1)
-    move_servo(0)
+def train():
+    os.remove("checkpoint")
+    os.remove("data.pickle")
+    os.remove("model.tflearn.data-00000-of-00001")
+    os.remove("model.tflearn.index")
+    os.remove("model.tflearn.meta")
+    exec(open("trainer.py").read())
+    f = open("data.pickle", "x")
+    print("new model uploaded")
+    return
+
+# def blink():
+#    move_servo(0)
+#    move_servo(60)
+#    time.sleep(1)
+#    move_servo(0)
+
 
 def chat():
     frequency = 200  # Set Frequency To 200 Hertz
     duration = 1000  # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
+    # with sr.Microphone() as source:
+    #    voice = Listener.listen(source)
     while True:
-        #with sr.Microphone() as source:
-        #    voice = Listener.listen(source)
-        
         inp = input(":")
-        
         print(inp)
-        if inp == "quit":  
-                print("goodbye")
-                engine.say("goodbye")
-                engine.runAndWait()
-                break
-
+        if inp == "quit":
+            print("goodbye")
+            engine.say("goodbye")
+            engine.runAndWait()
+            return
+        if inp == "train":
+            train()
         results = model.predict([bag_of_words(inp, words)])
         results_index = numpy.argmax(results)
         tag = labels[results_index]
-
         for tg in data["intents"]:
             if tg['intent'] == tag:
                 responses = tg['responses']
+                if(tg['intent'] == "Math"):
+                    engine.say("computing now")
+                    engine.runAndWait()
+                    math = input("math:")
+                    res = client.query(math)
+                    answer = next(res.results).text
+                    print(answer)
+                    engine.say(answer)
+                    engine.runAndWait()
+                    responses = [" ", " ", " "]
                 if(tg['intent'] == "TimeQuery"):
                     now = datetime.now()
-                    current_time = now.strftime("%I:%M %p")   
-                    engine.say(current_time) 
+                    current_time = now.strftime("%I:%M %p")
+                    engine.say(current_time)
                     engine.runAndWait()
                     responses = [" ", " ", " "]
                 if(tg['intent'] == "Search"):
                     wordz = inp.split()
-                    
-                    engine.say(wikipedia.summary(wordz[-1]))
-                    engine.runAndWait();
+                    s = wikipedia.summary(wordz[-1])
+                    s1 = s[:len(s)//3:]
+                    s2 = s[len(s)//3:]
+                    s3 = s[len(s)//3:]
+
+                    engine.say(s1)
+                    engine.say("would you like me to continue")
+                    engine.runAndWait()
+                    rez = input(":")
+                    if(rez == "yes"):
+                        engine.say(s2)
+                        engine.say("would you like me to continue")
+                        engine.runAndWait()
+                        rez2 = input(":")
+                        if(rez2 == "yes"):
+                            engine.say(s3)
+                            engine.runAndWait()
+
                     responses = [" ", " ", " "]
-        #blink()
+    # blink()
         print(random.choice(responses))
         engine.say(random.choice(responses))
         engine.runAndWait()
+
 
 chat()
