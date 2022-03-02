@@ -12,9 +12,9 @@
                         "Hya there"
                   ],
                   "responses": [
-                        "Hi human",
-                        "Hello human",
-                        "Hola human"
+                        "Hello sir",
+                        "Hello how may I help you today",
+                        "Good to see you"
                   ],
                   "extension": {
                         "function": "",
@@ -154,11 +154,11 @@
                         "Great thanks! It is Bella"
                   ],
                   "responses": [
-                        "Great! Hi <HUMAN>! How can I help?",
-                        "Good! Hi <HUMAN>, how can I help you?",
-                        "Cool! Hello <HUMAN>, what can I do for you?",
-                        "OK! Hola <HUMAN>, how can I help you?",
-                        "OK! hi <HUMAN>, what can I do for you?"
+                        "Great! Hi Efe! How can I help?",
+                        "Good! Hi Efe, how can I help you?",
+                        "Cool! Hello Efe, what can I do for you?",
+                        "OK! Hola Efe, how can I help you?",
+                        "OK! hi Efe, what can I do for you?"
                   ],
                   "extension": {
                         "function": "extensions.gHumans.updateHuman",
@@ -268,9 +268,9 @@
                         "Tell me your name?"
                   ],
                   "responses": [
-                        "You can call me Gaia",
-                        "You may call me Gaia",
-                        "Call me Gaia"
+                        "My assigned name is Cora",
+                        "I have been given the name Cora",
+                        "My program is called Cora"
                   ],
                   "extension": {
                         "function": "",
@@ -997,6 +997,31 @@
                         "Give me one second",
                         "My pleasure",
                         "You cant do it yourself?"
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "",
+                        "clear": false
+                  },
+                  "entityType": "NA",
+                  "entities": []
+            },
+            {
+                  "intent": "Math",
+                  "text": [
+                        "Math"
+                  ],
+                  "responses": [
+                        "Let me get back to you",
+                        "Give me one second",
+                        "My pleasure",
+                        "You cant do it yourself?",
+                        "rookie stuff"
                   ],
                   "extension": {
                         "function": "",
