@@ -6,6 +6,7 @@ import numpy
 import tflearn
 import tensorflow
 import wolframalpha
+from newsapi import NewsApiClient
 import random
 import json
 import pickle
@@ -18,13 +19,15 @@ import winsound
 import time
 import PySimpleGUI as sg
 from nltk.stem.lancaster import LancasterStemmer
-from pyfirmata import Arduino, util
+#from pyfirmata import Arduino, util, STRING_DATA
 #board = Arduino('COM3')
 #iterator = util.Iterator(board)
-# iterator.start();
-#pin9 = board.get_pin('d:9:s')
-# def move_servo(a):
-#    pin9.write(a)#event, values = window.read()
+#iterator.start()
+
+
+#def write(a):
+#    board.digital[2].write(a)
+
 
 Listener = sr.Recognizer()
 engine = pyttsx3.init()
@@ -36,6 +39,7 @@ stemmer = LancasterStemmer()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 app_id = "AVW9PQ-P2LQGKJPQ9"
 client = wolframalpha.Client(app_id)
+newsapi = NewsApiClient(api_key='f5b7ed94f5474c05b78b9eef451df1b8')
 
 with open("intents.json") as file:
     data = json.load(file)
@@ -122,6 +126,7 @@ def bag_of_words(s, words):
 
     return numpy.array(bag)
 
+
 def train():
     os.remove("checkpoint")
     os.remove("data.pickle")
@@ -133,20 +138,18 @@ def train():
     print("new model uploaded")
     return
 
-# def blink():
-#    move_servo(0)
-#    move_servo(60)
-#    time.sleep(1)
-#    move_servo(0)
+
+
 
 
 def chat():
     frequency = 200  # Set Frequency To 200 Hertz
     duration = 1000  # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
-    # with sr.Microphone() as source:
-    #    voice = Listener.listen(source)
+
     while True:
+        now = datetime.now()
+        current_time = now.strftime("%I:%M %p")
         inp = input(":")
         print(inp)
         if inp == "quit":
@@ -162,6 +165,23 @@ def chat():
         for tg in data["intents"]:
             if tg['intent'] == tag:
                 responses = tg['responses']
+                if(tg['intent'] == "News"):
+                    try:
+                        engine.say("what do you want to know about in the news?")
+                        engine.runAndWait()
+                        qe = input("query:")
+                        top_headlines = newsapi.get_top_headlines(q=qe,
+                                                                category='business',
+                                                                language='en',
+                                                                country='us')
+                        # , top_headlines.articles[0].author , top_headlines.articles[0].title)
+                        print(top_headlines['articles'][1]['title'])
+                        for x in top_headlines['articles']:
+                            engine.say(x['title'])
+                            engine.runAndWait()
+                        responses = [" ", " ", " "]
+                    except:
+                        engine.say("An Error was encountered")
                 if(tg['intent'] == "Math"):
                     engine.say("computing now")
                     engine.runAndWait()
@@ -184,7 +204,6 @@ def chat():
                     s1 = s[:len(s)//3:]
                     s2 = s[len(s)//3:]
                     s3 = s[len(s)//3:]
-
                     engine.say(s1)
                     engine.say("would you like me to continue")
                     engine.runAndWait()
@@ -196,10 +215,11 @@ def chat():
                         rez2 = input(":")
                         if(rez2 == "yes"):
                             engine.say(s3)
+
                             engine.runAndWait()
 
                     responses = [" ", " ", " "]
-    # blink()
+
         print(random.choice(responses))
         engine.say(random.choice(responses))
         engine.runAndWait()
